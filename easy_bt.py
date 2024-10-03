@@ -4,7 +4,7 @@ import os
 import hashlib
 import bencodepy
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.config["UP_DIR"] = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static/uploads/")
 app.debug = True
 
@@ -46,4 +46,5 @@ def upload():
 
 
 if __name__ == '__main__':
-    app.run(True)
+    app.run(debug=True, host="127.0.0.1", port=5000)
+
