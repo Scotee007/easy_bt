@@ -1,0 +1,123 @@
+{% extends "header.html" %}
+{% block css %}
+    html, body {
+        height: 80%; /* 让页面高度为100%，避免出现白色空白 */
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0; /* 设置全局背景色，避免出现纯白色 */
+    }
+    img {
+        width: 100%;
+        height: 100vh; /* 让图片高度覆盖整个视口 */
+        object-fit: cover; /* 确保图片按比例填充 */
+    }
+    .info {
+        z-index: 1;
+        top: 200px;
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        color: white; /* 字体颜色设为白色 */
+    }
+    .magnet-container {
+        margin-top: 20px;
+        font-size: 18px;
+        text-align: center;
+        background-color: rgba(128, 128, 105, 0.3); /* 背景颜色为30%透明度 */
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: inline-block; /* 宽度根据内容变化 */
+    }
+    ul#magnetList {
+        list-style-type: none;
+        padding: 0;
+    }
+    ul#magnetList li {
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+{% endblock %}
+
+{% block content %}
+    <div style="position: relative; height: 100vh;">
+        <div class="layui-carousel" id="test1" style="position: absolute; z-index: 0; height: 100%;">
+            <div carousel-item>
+                <div><img lay-src="{{ url_for('static',filename='images/carousel/1.jpg') }}"></div>
+                <div><img lay-src="{{ url_for('static',filename='images/carousel/2.jpg') }}"></div>
+                <div><img lay-src="{{ url_for('static',filename='images/carousel/3.jpg') }}"></div>
+                <div><img lay-src="{{ url_for('static',filename='images/carousel/4.jpg') }}"></div>
+            </div>
+        </div>
+
+        <div class="info">
+            <div class="clean-container" style="background-color: rgba(0, 0, 0, 0.5); padding: 20px; border-radius: 10px;">
+                <span style="font-size: 70px; color: white;">种子文件在线清洗</span>
+            </div>
+
+            <button class="layui-btn layui-btn-lg layui-btn-radius layui-btn-normal" id="upload" name="file" style="margin-top: 20px;">
+                <i class="layui-icon">&#xe67c;</i>上传文件
+            </button>
+
+            <!-- 磁力链接显示区域 -->
+            <div id="magnetContainer" class="magnet-container" style="display: none; margin-top: 30px;">
+                <span style="color: #000;">生成的磁力链接:</span>
+                <ul id="magnetList"></ul>  <!-- 生成的磁力链接列表 -->
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block layuijs %}
+    var carousel = layui.carousel;
+    // 建造实例
+    carousel.render({
+        elem: '#test1',
+        width: '100%', // 设置容器宽度
+        height: '100%', // 设置高度为100%视口
+        arrow: 'hover', // 始终显示箭头
+        interval: 3000
+    });
+
+    layui.use('flow', function(){
+        var flow = layui.flow;
+        // 当你执行这样一个方法时，即对页面中的全部带有lay-src的img元素开启了懒加载
+        flow.lazyimg();
+    });
+
+    var upload = layui.upload;
+    var layer = layui.layer;
+
+    // 执行实例，允许多文件上传
+    var uploadInst = upload.render({
+        elem: '#upload', // 绑定元素
+        url: '/upload', // 上传接口
+        accept: 'file',
+        exts: 'torrent', // 限定上传文件的扩展名
+        multiple: true, // 允许多文件选择
+        choose: function (obj) {
+            obj.preview(function (index, file) {
+                console.log('选择了文件: ' + file.name);
+            });
+        },
+        done: function(res){
+            console.log(res);
+            if (res.status === 1){
+                // 成功后显示磁力链接，多个磁力链接按列表显示
+                document.getElementById('magnetContainer').style.display = 'block';
+                res.result.forEach(function(link) {
+                    var li = document.createElement('li');
+                    li.innerText = link;
+                    document.getElementById('magnetList').appendChild(li);
+                });
+                layer.msg("磁力链接生成成功！");
+            }
+            else {
+                layer.msg("上传失败，请重试！");
+            }
+        },
+        error: function(){
+            layer.msg("上传过程中出现错误！");
+        }
+    });
+{% endblock %}
